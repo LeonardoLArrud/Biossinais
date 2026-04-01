@@ -4,9 +4,12 @@ import matplotlib.pyplot as plt
 from scipy import signal
 import pandas as pd
 import neurokit2 as nk
+from snr import SNR
+from kurtosis_skewness import calculate_kurtosis_skewness as cks
+import neurokit2 as nk
 
 # Exemplo de registro do PTB-XL
-record_name = './data/00001_hr' 
+record_name = '../data500/00001_hr' #Tive que alterar aqui, a maneira que tava nao pegava a pasta fora de 'aquisicao-filtragem'
 
 record = wfdb.rdrecord(record_name)
 fs = record.fs  # Frequência de amostragem (esperado 500 Hz)
@@ -39,9 +42,30 @@ def aplicar_filtros(sinal, fs):
 
 ecg_filtrado = aplicar_filtros(ecg_raw, fs)
 
+#FOR LOOP PARA QUE PEGUE VARIOS QUADROS DE 10S
+
+kurtosis_filtrado = cks.calc_kurtosis(ecg_filtrado)
+skew_filtrado = cks.calc_skew(ecg_filtrado)
+snr_db = SNR.calc_snr(ecg_raw, ecg_filtrado)
+#NK:
+quality = nk.ecg_quality(ecg_filtrado, sampling_rate=500, method="zhao2018")
+entropy, info = nk.entropy_spectral(ecg_filtrado,show=False)
+
+print(f"Kurtosis: {kurtosis_filtrado:.4f}")
+print(f"Skewness: {skew_filtrado:.4f}")
+print(f"snr: {snr_db:.4f}")
+print(f"Quality: {quality}")
+
+#SALVANDO NUM CSV PARA ANALISE, QUADROS DE 10S:
+
+df_stats = pd.DataFrame({'segmento': [1], 'Kurtosis': [kurtosis_filtrado], 'Skewness': [skew_filtrado],
+                        'snr': [snr_db], 
+                        'Quality': [quality],
+                        'Entropy': [entropy] })
+df_stats.to_csv("../data/stats_signal.csv",index=False)
 # Salvando num CSV para que a próxima etapa
 df_saida = pd.DataFrame({'Tempo_s': tempo, 'ECG_Bruto': ecg_raw, 'ECG_Filtrado': ecg_filtrado})
-df_saida.to_csv('sinal_filtrado.csv', index=False)
+df_saida.to_csv('../data/sinal_filtrado.csv', index=False)
 print("Arquivo sinal_filtrado.csv salvo com sucesso para o Passo 2!")
 
 # 5. Gerando os Gráficos
