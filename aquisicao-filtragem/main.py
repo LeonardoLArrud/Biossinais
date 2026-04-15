@@ -41,7 +41,7 @@ for i in range(5):
     segmento.append(i)
 
     # Exemplo de registro do PTB-XL
-    record_name = f'./data500/0000{i+1}_hr' #Tive que alterar aqui, a maneira que tava nao pegava a pasta fora de 'aquisicao-filtragem'
+    record_name = f'../data500/0000{i+1}_hr' #Tive que alterar aqui, a maneira que tava nao pegava a pasta fora de 'aquisicao-filtragem'
 
     record = wfdb.rdrecord(record_name)
     fs = record.fs  # Frequência de amostragem (esperado 500 Hz)
@@ -71,14 +71,13 @@ for i in range(5):
     # 5. Gerando os Gráficos
     plt.figure(figsize=(12, 6))
 
-    plt.subplot(2, 1, 1)
+    plt.subplot(1, 1, 1)
     plt.plot(tempo[i], ecg_raw[i], color='lightgray', label='Sinal Bruto')
     plt.title(f'Sinal de ECG Bruto - Derivação II ({fs} Hz)')
     plt.ylabel('Amplitude (mV)')
     plt.legend()
     plt.grid(True)
 
-    plt.subplot(2, 1, 2)
     plt.plot(tempo[i], ecg_filtrado[i], color='red', label='Sinal Filtrado')
     plt.title('Sinal Após Filtragem')
     plt.xlabel('Tempo (segundos)')
@@ -100,9 +99,9 @@ df_stats = pd.DataFrame({'segmento': segmento, 'Kurtosis': kurtosis_filtrado, 'S
                         'snr': snr_db, 
                         'Quality': quality,
                         'Entropy': entropy })
-df_stats.to_csv("./data/stats_signal.csv",index=False)
+df_stats.to_csv("../data/stats_signal.csv",index=False)
 # Salvando num CSV para que a próxima etapa
 for i in range(5):
     df_saida = pd.DataFrame({'Tempo_s': tempo[i], 'ECG_Bruto': ecg_raw[i], 'ECG_Filtrado': ecg_filtrado[i]})
-    df_saida.to_csv(f'./data/sinal_filtrado{i+1}.csv', index=False)
+    df_saida.to_csv(f'../data/sinal_filtrado{i+1}.csv', index=False)
     print(f"Arquivo sinal_filtrado{i+1}.csv salvo com sucesso para o Passo 2!")
