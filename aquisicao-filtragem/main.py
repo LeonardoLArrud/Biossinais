@@ -7,6 +7,7 @@ import neurokit2 as nk
 from snr import SNR
 from kurtosis_skewness import calculate_kurtosis_skewness as cks
 import neurokit2 as nk
+from pca import pca
 
 def aplicar_filtros(sinal, fs):
     # Filtro Passa-Banda Butterworth - 0.5 Hz a 40 Hz
@@ -35,15 +36,16 @@ segmento = []
 tempo = []
 ecg_raw = []
 ecg_filtrado = []
-
+pca_scores = [] 
+pca_models = []
 
 for i in range(5):
     segmento.append(i)
 
     # Exemplo de registro do PTB-XL
-    record_name = f'../data500/0000{i+1}_hr' #Tive que alterar aqui, a maneira que tava nao pegava a pasta fora de 'aquisicao-filtragem'
+    path = r'C:\Users\leona\Biosinais\data500\00001_hr'#Tive que alterar aqui, a maneira que tava nao pegava a pasta fora de 'aquisicao-filtragem'
 
-    record = wfdb.rdrecord(record_name)
+    record = wfdb.rdrecord(path)
     fs = record.fs  # Frequência de amostragem (esperado 500 Hz)
 
     # Extraindo a Derivação II
@@ -56,7 +58,18 @@ for i in range(5):
     tempo.append(np.arange(len(ecg_raw[i])) / fs)
 
     ecg_filtrado.append(aplicar_filtros(ecg_raw[i], fs))
+    modelo_pca = pca()
+    z, pca_model = modelo_pca.process(ecg_filtrado[i])
+    pca_scores.append(z)
+    pca_models.append(pca_model)
 
+    plt.figure(figsize=(8, 6))
+    plt.scatter(z[:, 0], z[:, 1], alpha=0.7, edgecolors='k')
+    plt.xlabel('Componente Principal 1')
+    plt.ylabel('Componente Principal 2')
+    plt.title('Mapa dos Batimentos no Espaço PCA')
+    plt.grid(True)
+    plt.show()  
     #FOR LOOP PARA QUE PEGUE VARIOS QUADROS DE 10S
 
     kurtosis_filtrado.append(cks.calc_kurtosis(ecg_filtrado[i]))
