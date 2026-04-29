@@ -1,24 +1,25 @@
 import numpy as np
 from scipy.signal import find_peaks
 from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+import pandas as pd
+
+class pca:
+    def process(self, data, fs):
+        ecg_df = self.differentiate(data)
+        ecg_ma = self.movingavarage(ecg_df)
+        peaks = self.qrspeaks(ecg_ma, fs)
+        janela = self.window(data, peaks, fs, 0.2, 0.4)
+        matrix, x = self.obersvartion_matrix(janela)  
+        pca = PCA(n_components=5)
+        z = pca.fit_transform(matrix)
+        return z, pca, x
 #After the filtering process, the ECG signal was differentiated. 
 # The derivative enhance the steepness or slope of the QRS complex,
 #  because differentiating a curve enhances rapid changes and sharp edges.
 
 #The signal was squared after the derivative stage to ensure 
 # that all signal components exhibited positive values
-class pca:
-    def process(self, data):
-        fs = 250
-        ecg_df = self.differentiate(data)
-        ecg_ma = self.movingavarage(ecg_df)
-        peaks = self.qrspeaks(ecg_ma, fs)
-        janela = self.window(data, peaks, fs, 0.2, 0.4)
-        matrix = self.obersvartion_matrix(janela)  
-        pca = PCA(n_components=5)
-        z = pca.fit_transform(matrix)
-        return z, pca
-
     def differentiate(self, data):
         ECG_df = np.diff(data)
         ECG_sq = np.power(ECG_df, 2)
@@ -48,7 +49,9 @@ class pca:
         return np.array(segments)
 
     def obersvartion_matrix(self, janela):
+        print(janela.shape)
         X = np.vstack(janela)
+        print(X.shape)
         X_centered = X - X.mean(axis=0)  
-        return X_centered
-        
+        return X_centered, X
+

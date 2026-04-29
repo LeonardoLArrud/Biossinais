@@ -59,7 +59,7 @@ for i in range(5):
 
     ecg_filtrado.append(aplicar_filtros(ecg_raw[i], fs))
     modelo_pca = pca()
-    z, pca_model = modelo_pca.process(ecg_filtrado[i])
+    z, pca_model, matrix = modelo_pca.process(ecg_filtrado[i], fs)
     pca_scores.append(z)
     pca_models.append(pca_model)
 
@@ -69,7 +69,30 @@ for i in range(5):
     plt.ylabel('Componente Principal 2')
     plt.title('Mapa dos Batimentos no Espaço PCA')
     plt.grid(True)
-    plt.show()  
+    plt.show()
+
+    k=2
+    z_reduzido = z.copy()
+    z_reduzido[:, k:] = 0
+    x_reconstruido = pca_model.inverse_transform(z_reduzido)  
+    tempo = np.linspace(-0.2, 0.4, matrix.shape[1])
+
+    fig, axes = plt.subplots(3, 2, figsize=(12, 2.5 * 3))
+
+    for idx in range(3):
+        axes[idx, 0].plot(tempo, x_reconstruido[idx] + matrix.mean(axis=0), color='orange')
+        axes[idx, 0].axvline(0, color='gray', linestyle=':', alpha=0.5)
+        axes[idx, 0].set_title(f'Batimento {idx} — Reconstruído')
+        axes[idx, 0].grid(True)
+
+        # Original bruto
+        axes[idx, 1].plot(tempo, matrix[idx], color='blue')
+        axes[idx, 1].axvline(0, color='gray', linestyle=':', alpha=0.5)
+        axes[idx, 1].set_title(f'Batimento {idx} — Original')
+        axes[idx, 1].grid(True)
+    plt.suptitle('Reconstruído (K=2) vs Original', fontsize=14)
+    plt.tight_layout()
+    plt.show()
     #FOR LOOP PARA QUE PEGUE VARIOS QUADROS DE 10S
 
     kurtosis_filtrado.append(cks.calc_kurtosis(ecg_filtrado[i]))
